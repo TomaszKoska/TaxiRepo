@@ -30,12 +30,10 @@ public class Record {
     private String trip_duration;
 
     //new
-    private final static List<String> headersDummiesDays = new ArrayList<>(185);
-    private final static List<String> headersDummies5min = new ArrayList<>(12*24);
     private final static List<String> headersDummiesSeasons = Arrays.asList("isWinter", "isSpring", "isSummer");
     private final static List<String> headersDummiesWeek = Arrays.asList("MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY");
-    private List<String> dummiesDays = new ArrayList<>(185);
-    private List<String> dummies5min = new ArrayList<>(12*24);
+    private String day;
+    private String min5;
     private List<String> dummiesSeasons = new ArrayList<>(3);
     private List<String> dummiesWeek = new ArrayList<>(7);
     private String distancePitagoras;
@@ -47,23 +45,6 @@ public class Record {
     private String pickSquareHour;
     private String bigTimesBig;
 
-
-    static {
-        // initialize headers
-        LocalDate start = LocalDate.parse("2016-01-01");
-        LocalDate end = LocalDate.parse("2016-06-30");
-        Stream.iterate(start, date -> date.plusDays(1))
-                .limit(ChronoUnit.DAYS.between(start, end) + 1)
-                .forEach(s -> headersDummiesDays.add("is"+s));
-
-        LocalTime startTime = LocalTime.parse("00:00");
-        LocalTime endTime = LocalTime.parse("00:05");
-        for (int i=1; i<=12*24; i++) {
-            headersDummies5min.add("is" + startTime + "to" + endTime);
-            startTime = startTime.plusMinutes(5);
-            endTime = endTime.plusMinutes(5);
-        }
-    }
 
     @Override
     public String toString() {
@@ -82,9 +63,9 @@ public class Record {
                 + "," + dropoff_latitude
                 + "," + store_and_fwd_flag
                 + "," + trip_duration
-                + "," + String.join(",", dummiesDays)
+                + "," + day
+                + "," + min5
                 + "," + String.join(",", dummiesWeek)
-                + "," + String.join(",", dummies5min)
                 + "," + String.join(",", dummiesSeasons)
                 + "," + distancePitagoras
                 + "," + distanceManhatan
@@ -108,9 +89,9 @@ public class Record {
                 + "," + "dropoff_latitude"
                 + "," + "store_and_fwd_flag"
                 + "," + "trip_duration"
-                + "," + String.join(",", headersDummiesDays)
+                + "," + "day"
+                + "," + "min5"
                 + "," + String.join(",", headersDummiesWeek)
-                + "," + String.join(",", headersDummies5min)
                 + "," + String.join(",", headersDummiesSeasons)
                 + "," + "distancePitagoras"
                 + "," + "distanceManhatan"
@@ -149,16 +130,13 @@ public class Record {
     private void processDatetime(String pickup_datetime) {
         LocalDate pickupDate = LocalDate.parse(pickup_datetime.substring(0,10));
         DayOfWeek dayOfWeek = pickupDate.getDayOfWeek();
-        LocalTime pickupTime = LocalTime.parse(pickup_datetime.substring(11, 19));
 
         // days
-        LocalDate start = LocalDate.parse("2016-01-01");
-        LocalDate end = LocalDate.parse("2016-06-30");
+        day = pickup_datetime.substring(0,10);
 
-        Stream.iterate(start, date -> date.plusDays(1))
-                .limit(ChronoUnit.DAYS.between(start, end) + 1)
-                .map(d -> d.equals(pickupDate) ? "1" : "0")
-                .forEach(s -> dummiesDays.add(s));
+        // 5min
+        int zeroOrFive = (Integer.valueOf(pickup_datetime.substring(15, 16)) / 5) * 5;
+        min5 = pickup_datetime.substring(11, 15) + zeroOrFive;
 
         // weekdays
         for (int i=1; i<=7; i++) {
@@ -170,15 +148,6 @@ public class Record {
         dummiesSeasons.add(!pickupDate.isBefore(LocalDate.parse("2016-03-20"))
                 && !pickupDate.isAfter(LocalDate.parse("2016-06-20"))? "1" : "0");
         dummiesSeasons.add(pickupDate.isAfter(LocalDate.parse("2016-06-20")) ? "1" : "0");
-
-        // 5min
-        LocalTime startTime = LocalTime.parse("00:00");
-        LocalTime endTime = LocalTime.parse("00:05");
-        for (int i=1; i<=12*24; i++) {
-            dummies5min.add(!pickupTime.isBefore(startTime) && pickupTime.isBefore(endTime) ? "1" : "0");
-            startTime = startTime.plusMinutes(5);
-            endTime = endTime.plusMinutes(5);
-        }
     }
 
     private void processDistances() {
