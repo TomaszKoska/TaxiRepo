@@ -3,22 +3,23 @@ package taxi.processing;
 public class Main {
 
     private static final String WORKSPACE = "C:\\Users\\MM\\Desktop\\workspace\\taxi\\";
+    private static final String SUFFIX = "BigSquares";
+    private static final String TRAIN_PATH = WORKSPACE + "raw\\trainWithoutDropoff.csv";
+    private static final String TEST_PATH = WORKSPACE + "raw\\test.csv";
 
     public static void main(String[] args) {
 
-        String inPath = WORKSPACE + "raw\\trainWithoutDropoff.csv";
-        String outPath = WORKSPACE + "output\\trainProcessed.csv";
-        String outPathSmall = WORKSPACE + "output\\trainProcessedSmall.csv";
+        DataFrame df = new DataFrame();
 
-        DataFrame dfTrain = new DataFrame();
-        dfTrain.process(inPath, outPath, outPathSmall, true);
+        df.processHeader(TRAIN_PATH, true);
+        df.processHeader(TEST_PATH, false);
 
+        String outPath = WORKSPACE + "output\\train" + SUFFIX + ".csv";
+        String outPathSmall = WORKSPACE + "output\\train" + SUFFIX + "5.csv";
+        df.process(TRAIN_PATH, outPath, outPathSmall, true);
 
-        inPath = WORKSPACE + "raw\\test.csv";
-        outPath = WORKSPACE + "output\\testProcessed.csv";
-        outPathSmall = WORKSPACE + "output\\testProcessedSmall.csv";
-
-        DataFrame dfTest = new DataFrame();
-        dfTest.process(inPath, outPath, outPathSmall, false);
+        outPath = WORKSPACE + "output\\test" + SUFFIX + ".csv";
+        outPathSmall = WORKSPACE + "output\\test" + SUFFIX + "5.csv";
+        df.process(TEST_PATH, outPath, outPathSmall, false);
     }
 }

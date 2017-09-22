@@ -34,10 +34,20 @@ public class Record {
     private final static List<String> headersDummies5min = new ArrayList<>(12*24);
     private final static List<String> headersDummiesSeasons = Arrays.asList("isWinter", "isSpring", "isSummer");
     private final static List<String> headersDummiesWeek = Arrays.asList("MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY");
+    private final static List<String> headersDummiesPickBig = new ArrayList<>();
+    private final static List<String> headersDummiesDropBig = new ArrayList<>();
+    private final static List<String> headersDummiesPickSmall = new ArrayList<>();
+    private final static List<String> headersDummiesDropSmall = new ArrayList<>();
+    private final static List<String> headersDummiesBigTimesBig = new ArrayList<>();
     private List<String> dummiesDays = new ArrayList<>(185);
     private List<String> dummies5min = new ArrayList<>(12*24);
     private List<String> dummiesSeasons = new ArrayList<>(3);
     private List<String> dummiesWeek = new ArrayList<>(7);
+    private List<String> dummiesPickBig = new ArrayList<>();
+    private List<String> dummiesDropBig = new ArrayList<>();
+    private List<String> dummiesPickSmall = new ArrayList<>();
+    private List<String> dummiesDropSmall = new ArrayList<>();
+    private List<String> dummiesBigTimesBig = new ArrayList<>();
     private String distancePitagoras;
     private String distanceManhatan;
     private String pickBigSquare;
@@ -74,7 +84,7 @@ public class Record {
             return "";
         return id
                 + "," + vendor_id
-                + "," + pickup_datetime
+                //+ "," + pickup_datetime
                 + "," + passenger_count
                 + "," + pickup_longitude
                 + "," + pickup_latitude
@@ -88,19 +98,24 @@ public class Record {
                 + "," + String.join(",", dummiesSeasons)
                 + "," + distancePitagoras
                 + "," + distanceManhatan
-                + "," + pickBigSquare
-                + "," + dropBigSquare
-                + "," + pickSmallSquare
-                + "," + dropSmallSquare
-                + "," + pickSquareHour
-                + "," + bigTimesBig
+//                + "," + pickBigSquare
+//                + "," + dropBigSquare
+//                + "," + pickSmallSquare
+//                + "," + dropSmallSquare
+//                + "," + pickSquareHour
+//                + "," + bigTimesBig
+                + "," + String.join(",", dummiesPickBig) //file with big
+                + "," + String.join(",", dummiesDropBig) //file with big
+//                + "," + String.join(",", dummiesPickSmall) // file with small
+//                + "," + String.join(",", dummiesDropSmall) // file with small
+//                + "," + String.join(",", dummiesBigTimesBig) // file with bigXbig
                 + "\r\n";
     }
 
     static String getHeader() {
         return "id"
                 + "," + "vendor_id"
-                + "," + "pickup_datetime"
+                //+ "," + "pickup_datetime"
                 + "," + "passenger_count"
                 + "," + "pickup_longitude"
                 + "," + "pickup_latitude"
@@ -114,12 +129,17 @@ public class Record {
                 + "," + String.join(",", headersDummiesSeasons)
                 + "," + "distancePitagoras"
                 + "," + "distanceManhatan"
-                + "," + "pickBigSquare"
-                + "," + "dropBigSquare"
-                + "," + "pickSmallSquare"
-                + "," + "dropSmallSquare"
-                + "," + "pickSquareHour"
-                + "," + "bigTimesBig"
+//                + "," + "pickBigSquare"
+//                + "," + "dropBigSquare"
+//                + "," + "pickSmallSquare"
+//                + "," + "dropSmallSquare"
+//                + "," + "pickSquareHour"
+//                + "," + "bigTimesBig"
+                + "," + String.join(",", headersDummiesPickBig) // file with big
+                + "," + String.join(",", headersDummiesDropBig) // file with big
+//                + "," + String.join(",", headersDummiesPickSmall) //file with small
+//                + "," + String.join(",", headersDummiesDropSmall) // file with small
+//                + "," + String.join(",", headersDummiesBigTimesBig) // file with bigXbig
                 + "\r\n";
     }
 
@@ -141,8 +161,7 @@ public class Record {
         } else {
             this.trip_duration = "";
         }
-        processDatetime(pickup_datetime);
-        processDistances();
+
         processSquares();
     }
 
@@ -215,4 +234,46 @@ public class Record {
         bigTimesBig = pickBigSquare + "x" + dropBigSquare;
     }
 
+    static void fillDummiesHeader(Record record) {
+        if (record.isTrain && (Double.parseDouble(record.pickup_longitude) < LEFT_BORDER
+                || Double.parseDouble(record.dropoff_longitude) < LEFT_BORDER
+                || Double.parseDouble(record.pickup_latitude) > UP_BORDER
+                || Double.parseDouble(record.dropoff_latitude) > UP_BORDER))
+            return;
+        if (!headersDummiesPickBig.contains(record.pickBigSquare)) {
+            headersDummiesPickBig.add(record.pickBigSquare);
+        }
+        if (!headersDummiesDropBig.contains(record.dropBigSquare)) {
+            headersDummiesDropBig.add(record.dropBigSquare);
+        }
+        if (!headersDummiesPickSmall.contains(record.pickSmallSquare)) {
+            headersDummiesPickSmall.add(record.pickSmallSquare);
+        }
+        if (!headersDummiesDropSmall.contains(record.dropSmallSquare)) {
+            headersDummiesDropSmall.add(record.dropSmallSquare);
+        }
+        if (!headersDummiesBigTimesBig.contains(record.bigTimesBig)) {
+            headersDummiesBigTimesBig.add(record.bigTimesBig);
+        }
+    }
+
+    public void processSquareDummies() {
+        processDatetime(pickup_datetime);
+        processDistances();
+        insertToDummiesSquares(headersDummiesPickBig, dummiesPickBig, pickBigSquare);
+        insertToDummiesSquares(headersDummiesDropBig, dummiesDropBig, dropBigSquare);
+        insertToDummiesSquares(headersDummiesPickSmall, dummiesPickSmall, pickSmallSquare);
+        insertToDummiesSquares(headersDummiesDropSmall, dummiesDropSmall, dropSmallSquare);
+        insertToDummiesSquares(headersDummiesBigTimesBig, dummiesBigTimesBig, bigTimesBig);
+    }
+
+    private void insertToDummiesSquares(List<String> headers, List<String> dummies, String field) {
+        for (String header : headers) {
+            if (header.equals(field)) {
+                dummies.add("1");
+            } else {
+                dummies.add("0");
+            }
+        }
+    }
 }

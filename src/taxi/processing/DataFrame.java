@@ -19,6 +19,34 @@ public class DataFrame {
         records = new ArrayList<>();
     }
 
+    void processHeader(String inPath, boolean isTrain) {
+        FileInputStream inputStream = null;
+        Scanner sc = null;
+        try {
+            inputStream = new FileInputStream(inPath);
+            sc = new Scanner(inputStream, "UTF-8");
+            int i = 0;
+            while (sc.hasNextLine()) {
+                if (i == 0) {
+                    i++;
+                    sc.nextLine();
+                    continue;
+                }
+                String line = sc.nextLine();
+                Record record = new Record(line.split(","), isTrain);
+                Record.fillDummiesHeader(record);
+            }
+            if (sc.ioException() != null) {
+                throw sc.ioException();
+            }
+
+            inputStream.close();
+            sc.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     void process(String inPath, String outPath, String outPathSmall, boolean isTrain) {
         FileInputStream inputStream = null;
         FileOutputStream outputStream = null;
@@ -29,6 +57,7 @@ public class DataFrame {
             outputStream = new FileOutputStream(outPath);
             outputStreamSmall = new FileOutputStream(outPathSmall);
             sc = new Scanner(inputStream, "UTF-8");
+
             int i = 0;
             while (sc.hasNextLine()) {
                 if (i == 0) {
@@ -39,8 +68,11 @@ public class DataFrame {
                     continue;
                 }
                 String line = sc.nextLine();
-                System.out.println(i++);
+                i++;
+                if (i % 100 == 0)
+                    System.out.println(i);
                 Record record = new Record(line.split(","), isTrain);
+                record.processSquareDummies();
                 outputStream.write(record.toString().getBytes());
                 if (Math.random() < 0.05) {
                     outputStreamSmall.write(record.toString().getBytes());
