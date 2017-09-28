@@ -3,7 +3,7 @@ package taxi.processing;
 public class Main {
 
     private static final String WORKSPACE = "C:\\Users\\Tomek\\Desktop\\kaggle\\taxi\\";
-    private static final String SUFFIX = "TomBigSqares";
+    private static final String SUFFIX = "Tom_BigSqares";
     private static final String TRAIN_PATH = WORKSPACE + "raw\\trainWithoutDropoff.csv";
     private static final String TEST_PATH = WORKSPACE + "raw\\test.csv";
 
